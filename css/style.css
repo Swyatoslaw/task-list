@@ -483,7 +483,6 @@ code {
 
 .item.is-done .item-text {
   color: var(--muted);
-  text-decoration: line-through;
 }
 
 .item-date {
