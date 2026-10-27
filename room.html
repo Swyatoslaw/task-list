@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f5f7" />
+    <title>Комната — Список задач</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <script>
+      (function () {
+        var t = localStorage.getItem('theme');
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script type="module" src="js/room.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="icon-btn" href="./" title="Все комнаты" aria-label="Все комнаты" id="back-link"></a>
+        <h1 class="topbar-title" id="room-title">Загрузка…</h1>
+        <button type="button" class="icon-btn" id="copy-link" title="Скопировать ссылку" aria-label="Скопировать ссылку" hidden></button>
+        <button type="button" class="icon-btn" id="theme-toggle"></button>
+      </div>
+    </header>
+
+    <main class="container" id="room-main">
+      <form id="create-card" class="inline-form create-card" hidden>
+        <input
+          class="input"
+          id="card-title"
+          type="text"
+          placeholder="Название новой карточки"
+          maxlength="100"
+          autocomplete="off"
+          required
+        />
+        <button class="btn btn-primary" type="submit">Создать<span class="btn-label-long">карточку</span></button>
+      </form>
+
+      <p class="muted center" id="loading">Загрузка…</p>
+      <p class="empty-state" id="empty-state" hidden>Карточек пока нет. Создайте первую — например, «Покупки».</p>
+      <div class="cards" id="cards"></div>
+    </main>
+  </body>
+</html>
