@@ -21,6 +21,22 @@
       <div class="topbar-inner">
         <a class="icon-btn" href="./" title="Все комнаты" aria-label="Все комнаты" id="back-link"></a>
         <h1 class="topbar-title" id="room-title">Загрузка…</h1>
+        <div class="menu-wrap" id="export-wrap" hidden>
+          <button
+            type="button"
+            class="icon-btn"
+            id="export-btn"
+            title="Экспорт комнаты"
+            aria-label="Экспорт комнаты"
+            aria-haspopup="menu"
+            aria-expanded="false"
+          ></button>
+          <div class="menu" id="export-menu" role="menu" hidden>
+            <div class="menu-title">Экспорт комнаты</div>
+            <button type="button" class="menu-item" role="menuitem" data-format="json">Скачать JSON</button>
+            <button type="button" class="menu-item" role="menuitem" data-format="txt">Скачать TXT</button>
+          </div>
+        </div>
         <button type="button" class="icon-btn" id="copy-link" title="Скопировать ссылку" aria-label="Скопировать ссылку" hidden></button>
         <button type="button" class="icon-btn" id="theme-toggle"></button>
       </div>

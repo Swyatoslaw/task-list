@@ -35,6 +35,9 @@ const els = {
   empty: document.getElementById('empty-state'),
   loading: document.getElementById('loading'),
   copyLink: document.getElementById('copy-link'),
+  exportWrap: document.getElementById('export-wrap'),
+  exportBtn: document.getElementById('export-btn'),
+  exportMenu: document.getElementById('export-menu'),
 };
 
 const state = {
@@ -49,6 +52,7 @@ const state = {
 initThemeToggle(document.getElementById('theme-toggle'));
 document.getElementById('back-link').innerHTML = icons.back;
 els.copyLink.innerHTML = icons.link;
+els.exportBtn.innerHTML = icons.download;
 
 init();
 
@@ -75,6 +79,7 @@ async function init() {
   els.loading.hidden = true;
   els.cardForm.hidden = false;
   els.copyLink.hidden = false;
+  els.exportWrap.hidden = false;
 
   subscribeRoom(roomId, scheduleReload);
   document.addEventListener('visibilitychange', () => {
@@ -127,6 +132,15 @@ function sortedCards() {
   return cards;
 }
 
+// Пункты карточки в порядке отображения: активные, затем завершённые.
+function cardItems(card) {
+  const items = state.items.filter((i) => i.card_id === card.id);
+  return {
+    active: items.filter((i) => !i.completed_at).sort(byDate('created_at')),
+    done: items.filter((i) => i.completed_at).sort(byDate('completed_at')),
+  };
+}
+
 function render() {
   const focus = captureFocus();
   const cards = sortedCards();
@@ -151,9 +165,8 @@ function restoreFocus(focus) {
 }
 
 function renderCard(card) {
-  const items = state.items.filter((i) => i.card_id === card.id);
-  const active = items.filter((i) => !i.completed_at).sort(byDate('created_at'));
-  const done = items.filter((i) => i.completed_at).sort(byDate('completed_at'));
+  const { active, done } = cardItems(card);
+  const items = [...active, ...done];
   const isPrimary = card.id === state.primaryId;
 
   const input = h('input', {
@@ -195,7 +208,7 @@ function renderCard(card) {
       )
     ),
     items.length > 0
-      ? h('ul', { class: 'items' }, [...active, ...done].map(renderItem))
+      ? h('ul', { class: 'items' }, items.map(renderItem))
       : h('p', { class: 'card-empty' }, 'Пунктов пока нет'),
     h(
       'form',
@@ -315,6 +328,83 @@ els.copyLink.addEventListener('click', async () => {
     await promptDialog('Ссылка на комнату', location.href, { okText: 'Готово', maxlength: 2000 });
   }
 });
+
+// Экспорт
+
+function setExportMenuOpen(open) {
+  els.exportMenu.hidden = !open;
+  els.exportBtn.setAttribute('aria-expanded', String(open));
+  if (open) els.exportMenu.querySelector('.menu-item').focus();
+}
+
+els.exportBtn.addEventListener('click', () => setExportMenuOpen(els.exportMenu.hidden));
+
+els.exportMenu.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-format]');
+  if (!button) return;
+  setExportMenuOpen(false);
+  exportRoom(button.dataset.format);
+});
+
+document.addEventListener('click', (event) => {
+  if (!els.exportMenu.hidden && !els.exportWrap.contains(event.target)) setExportMenuOpen(false);
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !els.exportMenu.hidden) {
+    setExportMenuOpen(false);
+    els.exportBtn.focus();
+  }
+});
+
+function exportRoom(format) {
+  const base = state.room.name.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'room';
+  if (format === 'json') {
+    download(`${base}.json`, JSON.stringify(roomAsJson(), null, 2), 'application/json');
+  } else {
+    download(`${base}.txt`, roomAsText(), 'text/plain;charset=utf-8');
+  }
+}
+
+function roomAsJson() {
+  return {
+    room: { id: state.room.id, name: state.room.name, created_at: state.room.created_at },
+    exported_at: new Date().toISOString(),
+    cards: sortedCards().map((card) => {
+      const { active, done } = cardItems(card);
+      return {
+        title: card.title,
+        created_at: card.created_at,
+        items: [...active, ...done].map((item) => ({
+          text: item.text,
+          completed: Boolean(item.completed_at),
+          completed_at: item.completed_at,
+          created_at: item.created_at,
+        })),
+      };
+    }),
+  };
+}
+
+function roomAsText() {
+  const lines = [state.room.name, `Экспорт: ${formatDate(new Date())}`];
+  for (const card of sortedCards()) {
+    const { active, done } = cardItems(card);
+    lines.push('', `${card.title} (${done.length}/${active.length + done.length})`);
+    for (const item of active) lines.push(`[ ] ${item.text}`);
+    for (const item of done) lines.push(`[x] ${item.text} — завершено ${formatDate(item.completed_at)}`);
+  }
+  return lines.join('\n') + '\n';
+}
+
+function download(filename, content, type) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const link = h('a', { href: url, download: filename });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 function togglePrimary(card) {
   state.primaryId = state.primaryId === card.id ? null : card.id;
