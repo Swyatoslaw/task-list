@@ -18,6 +18,7 @@ import {
   icons,
   iconButton,
   initThemeToggle,
+  setupMenu,
   toast,
   showError,
   confirmDialog,
@@ -39,7 +40,8 @@ const els = {
   renameRoom: document.getElementById('rename-room'),
   exportWrap: document.getElementById('export-wrap'),
   exportBtn: document.getElementById('export-btn'),
-  exportMenu: document.getElementById('export-menu'),
+  themeToggle: document.getElementById('theme-toggle'),
+  mobileMenuWrap: document.getElementById('mobile-menu-wrap'),
 };
 
 const state = {
@@ -53,11 +55,13 @@ const state = {
   search: new Map(), // cardId -> строка поиска по пунктам, только до перезагрузки страницы
 };
 
-initThemeToggle(document.getElementById('theme-toggle'));
+initThemeToggle(els.themeToggle);
 document.getElementById('back-link').innerHTML = icons.back;
 els.copyLink.innerHTML = icons.link;
 els.renameRoom.innerHTML = icons.edit;
 els.exportBtn.innerHTML = icons.download;
+document.getElementById('mobile-menu-btn').innerHTML = icons.more;
+for (const el of els.mobileMenuWrap.querySelectorAll('[data-icon]')) el.innerHTML = icons[el.dataset.icon];
 
 init();
 
@@ -84,6 +88,7 @@ async function init() {
   els.copyLink.hidden = false;
   els.renameRoom.hidden = false;
   els.exportWrap.hidden = false;
+  els.mobileMenuWrap.hidden = false;
 
   subscribeRoom(roomId, scheduleReload);
   document.addEventListener('visibilitychange', () => {
@@ -436,33 +441,26 @@ els.renameRoom.addEventListener('click', async () => {
   }
 });
 
+// Меню шапки
+
+setupMenu(els.exportWrap, { onSelect: exportRoom });
+
+// На телефоне пункты меню повторяют кнопки шапки, скрытые там через CSS.
+setupMenu(els.mobileMenuWrap, {
+  onOpen: () => {
+    const dark = document.documentElement.dataset.theme === 'dark';
+    document.getElementById('mobile-theme-icon').innerHTML = dark ? icons.sun : icons.moon;
+    document.getElementById('mobile-theme-label').textContent = dark ? 'Светлая тема' : 'Тёмная тема';
+  },
+  onSelect: (action) => {
+    if (action === 'rename') els.renameRoom.click();
+    else if (action === 'copy-link') els.copyLink.click();
+    else if (action === 'theme') els.themeToggle.click();
+    else exportRoom(action);
+  },
+});
+
 // Экспорт
-
-function setExportMenuOpen(open) {
-  els.exportMenu.hidden = !open;
-  els.exportBtn.setAttribute('aria-expanded', String(open));
-  if (open) els.exportMenu.querySelector('.menu-item').focus();
-}
-
-els.exportBtn.addEventListener('click', () => setExportMenuOpen(els.exportMenu.hidden));
-
-els.exportMenu.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-format]');
-  if (!button) return;
-  setExportMenuOpen(false);
-  exportRoom(button.dataset.format);
-});
-
-document.addEventListener('click', (event) => {
-  if (!els.exportMenu.hidden && !els.exportWrap.contains(event.target)) setExportMenuOpen(false);
-});
-
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && !els.exportMenu.hidden) {
-    setExportMenuOpen(false);
-    els.exportBtn.focus();
-  }
-});
 
 function exportRoom(format) {
   const base = state.room.name.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'room';

@@ -24,14 +24,14 @@
           <h1 class="topbar-title" id="room-title">Загрузка…</h1>
           <button
             type="button"
-            class="icon-btn"
+            class="icon-btn desktop-only"
             id="rename-room"
             title="Переименовать комнату"
             aria-label="Переименовать комнату"
             hidden
           ></button>
         </div>
-        <div class="menu-wrap" id="export-wrap" hidden>
+        <div class="menu-wrap desktop-only" id="export-wrap" hidden>
           <button
             type="button"
             class="icon-btn"
@@ -43,12 +43,51 @@
           ></button>
           <div class="menu" id="export-menu" role="menu" hidden>
             <div class="menu-title">Экспорт комнаты</div>
-            <button type="button" class="menu-item" role="menuitem" data-format="json">Скачать JSON</button>
-            <button type="button" class="menu-item" role="menuitem" data-format="txt">Скачать TXT</button>
+            <button type="button" class="menu-item" role="menuitem" data-action="json">Скачать JSON</button>
+            <button type="button" class="menu-item" role="menuitem" data-action="txt">Скачать TXT</button>
           </div>
         </div>
-        <button type="button" class="icon-btn" id="copy-link" title="Скопировать ссылку" aria-label="Скопировать ссылку" hidden></button>
-        <button type="button" class="icon-btn" id="theme-toggle"></button>
+        <button
+          type="button"
+          class="icon-btn desktop-only"
+          id="copy-link"
+          title="Скопировать ссылку"
+          aria-label="Скопировать ссылку"
+          hidden
+        ></button>
+        <button type="button" class="icon-btn desktop-only" id="theme-toggle"></button>
+
+        <!-- На телефоне кнопки шапки собраны в одно меню -->
+        <div class="menu-wrap mobile-only" id="mobile-menu-wrap" hidden>
+          <button
+            type="button"
+            class="icon-btn"
+            id="mobile-menu-btn"
+            title="Меню"
+            aria-label="Меню"
+            aria-haspopup="menu"
+            aria-expanded="false"
+          ></button>
+          <div class="menu" role="menu" hidden>
+            <button type="button" class="menu-item" role="menuitem" data-action="rename">
+              <span class="menu-icon" data-icon="edit"></span>Переименовать комнату
+            </button>
+            <button type="button" class="menu-item" role="menuitem" data-action="copy-link">
+              <span class="menu-icon" data-icon="link"></span>Скопировать ссылку
+            </button>
+            <button type="button" class="menu-item" role="menuitem" data-action="theme">
+              <span class="menu-icon" id="mobile-theme-icon"></span><span id="mobile-theme-label">Тема</span>
+            </button>
+            <div class="menu-separator" role="separator"></div>
+            <div class="menu-title">Экспорт комнаты</div>
+            <button type="button" class="menu-item" role="menuitem" data-action="json">
+              <span class="menu-icon" data-icon="download"></span>Скачать JSON
+            </button>
+            <button type="button" class="menu-item" role="menuitem" data-action="txt">
+              <span class="menu-icon" data-icon="download"></span>Скачать TXT
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 

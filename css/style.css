@@ -367,7 +367,34 @@ code {
   color: var(--text);
   font: inherit;
   text-align: left;
+  white-space: nowrap;
   cursor: pointer;
+}
+
+.menu-item:has(.menu-icon) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-icon {
+  display: flex;
+  color: var(--muted);
+}
+
+.menu-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.menu-separator {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--border);
+}
+
+.mobile-only {
+  display: none;
 }
 
 .menu-item:hover,
@@ -817,6 +844,14 @@ code {
 /* ---------- Смартфоны ---------- */
 
 @media (max-width: 600px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+
   .container {
     padding-top: 14px;
   }

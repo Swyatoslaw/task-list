@@ -35,6 +35,7 @@ export const icons = {
   download: svg('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/>'),
   arrow: svg('<path d="M9 18l6-6-6-6"/>'),
   chevron: svg('<path d="M6 9l6 6 6-6"/>'),
+  more: svg('<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>'),
   search: svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
 };
 
@@ -72,6 +73,37 @@ export function initThemeToggle(button) {
     localStorage.setItem('theme', next);
     applyTheme(next);
     update();
+  });
+}
+
+// Выпадающее меню: кнопка с aria-haspopup и список [role="menu"] внутри wrap.
+// onSelect получает data-action выбранного пункта, onOpen вызывается перед показом.
+export function setupMenu(wrap, { onSelect, onOpen } = {}) {
+  const button = wrap.querySelector('[aria-haspopup="menu"]');
+  const menu = wrap.querySelector('[role="menu"]');
+
+  const setOpen = (open) => {
+    if (open) onOpen?.();
+    menu.hidden = !open;
+    button.setAttribute('aria-expanded', String(open));
+    if (open) menu.querySelector('.menu-item')?.focus();
+  };
+
+  button.addEventListener('click', () => setOpen(menu.hidden));
+  menu.addEventListener('click', (event) => {
+    const item = event.target.closest('.menu-item');
+    if (!item) return;
+    setOpen(false);
+    onSelect?.(item.dataset.action);
+  });
+  document.addEventListener('click', (event) => {
+    if (!menu.hidden && !wrap.contains(event.target)) setOpen(false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !menu.hidden) {
+      setOpen(false);
+      button.focus();
+    }
   });
 }
 
