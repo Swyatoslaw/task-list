@@ -25,6 +25,11 @@ export async function getRoom(id) {
   return unwrap(await db.from('rooms').select('*').eq('id', id).maybeSingle());
 }
 
+// Без RLS-политики rooms_update запрос не изменит ни одной строки — вернём null.
+export async function updateRoom(id, patch) {
+  return unwrap(await db.from('rooms').update(patch).eq('id', id).select().maybeSingle());
+}
+
 // Карточки и пункты
 
 export async function getRoomContent(roomId) {
@@ -64,6 +69,7 @@ export async function deleteItem(id) {
 export function subscribeRoom(roomId, onChange) {
   const filter = `room_id=eq.${roomId}`;
   const channel = db.channel(`room-${roomId}`);
+  channel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'rooms', filter: `id=eq.${roomId}` }, onChange);
   for (const table of ['cards', 'items']) {
     channel
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table, filter }, onChange)

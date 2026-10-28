@@ -20,7 +20,17 @@
     <header class="topbar">
       <div class="topbar-inner">
         <a class="icon-btn" href="./" title="Все комнаты" aria-label="Все комнаты" id="back-link"></a>
-        <h1 class="topbar-title" id="room-title">Загрузка…</h1>
+        <div class="topbar-heading">
+          <h1 class="topbar-title" id="room-title">Загрузка…</h1>
+          <button
+            type="button"
+            class="icon-btn"
+            id="rename-room"
+            title="Переименовать комнату"
+            aria-label="Переименовать комнату"
+            hidden
+          ></button>
+        </div>
         <div class="menu-wrap" id="export-wrap" hidden>
           <button
             type="button"

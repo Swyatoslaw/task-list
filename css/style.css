@@ -123,8 +123,16 @@ code {
   text-decoration: none;
 }
 
-.topbar-title {
+.topbar-heading {
+  display: flex;
   flex: 1;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.topbar-title {
+  flex: 0 1 auto;
   min-width: 0;
   margin: 0;
   font-size: 18px;

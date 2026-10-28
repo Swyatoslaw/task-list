@@ -2,6 +2,7 @@ import {
   isConfigured,
   isUuid,
   getRoom,
+  updateRoom,
   getRoomContent,
   createCard,
   updateCard,
@@ -35,6 +36,7 @@ const els = {
   empty: document.getElementById('empty-state'),
   loading: document.getElementById('loading'),
   copyLink: document.getElementById('copy-link'),
+  renameRoom: document.getElementById('rename-room'),
   exportWrap: document.getElementById('export-wrap'),
   exportBtn: document.getElementById('export-btn'),
   exportMenu: document.getElementById('export-menu'),
@@ -54,6 +56,7 @@ const state = {
 initThemeToggle(document.getElementById('theme-toggle'));
 document.getElementById('back-link').innerHTML = icons.back;
 els.copyLink.innerHTML = icons.link;
+els.renameRoom.innerHTML = icons.edit;
 els.exportBtn.innerHTML = icons.download;
 
 init();
@@ -72,21 +75,28 @@ async function init() {
   }
   if (!state.room) return fatal('Комната не найдена.');
 
-  els.title.textContent = state.room.name;
-  document.title = `${state.room.name} — Список задач`;
-  rememberRoom(state.room);
+  applyRoom(state.room);
   state.primaryId = getPrimaryCard(roomId);
 
   await reload();
   els.loading.hidden = true;
   els.cardForm.hidden = false;
   els.copyLink.hidden = false;
+  els.renameRoom.hidden = false;
   els.exportWrap.hidden = false;
 
   subscribeRoom(roomId, scheduleReload);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) scheduleReload();
   });
+}
+
+function applyRoom(room) {
+  state.room = room;
+  els.title.textContent = room.name;
+  els.title.title = room.name;
+  document.title = `${room.name} — Список задач`;
+  rememberRoom(room);
 }
 
 function fatal(message) {
@@ -112,8 +122,9 @@ function scheduleReload() {
 async function reload() {
   const seq = ++reloadSeq;
   try {
-    const { cards, items } = await getRoomContent(roomId);
+    const [room, { cards, items }] = await Promise.all([getRoom(roomId), getRoomContent(roomId)]);
     if (seq !== reloadSeq) return; // пришёл более свежий запрос
+    if (room && room.name !== state.room.name) applyRoom(room);
     state.cards = cards;
     state.items = items;
     if (state.editing && !items.some((i) => i.id === state.editing.id)) state.editing = null;
@@ -407,6 +418,21 @@ els.copyLink.addEventListener('click', async () => {
     toast('Ссылка на комнату скопирована');
   } catch {
     await promptDialog('Ссылка на комнату', location.href, { okText: 'Готово', maxlength: 2000 });
+  }
+});
+
+els.renameRoom.addEventListener('click', async () => {
+  const previous = state.room;
+  const name = await promptDialog('Название комнаты', previous.name);
+  if (!name || name === previous.name) return;
+  applyRoom({ ...previous, name });
+  try {
+    const room = await updateRoom(roomId, { name });
+    if (!room) throw new Error('нет прав на изменение комнаты — выполните обновлённый supabase/schema.sql');
+    applyRoom(room);
+  } catch (error) {
+    applyRoom(previous);
+    showError(error, 'Не удалось переименовать комнату');
   }
 });
 

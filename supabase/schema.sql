@@ -55,8 +55,10 @@ alter table public.items enable row level security;
 
 drop policy if exists "rooms_select" on public.rooms;
 drop policy if exists "rooms_insert" on public.rooms;
+drop policy if exists "rooms_update" on public.rooms;
 create policy "rooms_select" on public.rooms for select to anon, authenticated using (true);
 create policy "rooms_insert" on public.rooms for insert to anon, authenticated with check (true);
+create policy "rooms_update" on public.rooms for update to anon, authenticated using (true) with check (true);
 
 drop policy if exists "cards_all" on public.cards;
 create policy "cards_all" on public.cards for all to anon, authenticated using (true) with check (true);
@@ -65,6 +67,12 @@ drop policy if exists "items_all" on public.items;
 create policy "items_all" on public.items for all to anon, authenticated using (true) with check (true);
 
 -- Realtime: изменения сразу видны на всех устройствах, открывших комнату.
+do $$
+begin
+  alter publication supabase_realtime add table public.rooms;
+exception when duplicate_object then null;
+end $$;
+
 do $$
 begin
   alter publication supabase_realtime add table public.cards;
