@@ -47,6 +47,7 @@ const state = {
   primaryId: null,
   drafts: new Map(), // cardId -> текст нового пункта
   editing: null, // { id, text } — пункт в режиме редактирования
+  collapsed: new Set(), // свёрнутые карточки, только до перезагрузки страницы
 };
 
 initThemeToggle(document.getElementById('theme-toggle'));
@@ -168,6 +169,7 @@ function renderCard(card) {
   const { active, done } = cardItems(card);
   const items = [...active, ...done];
   const isPrimary = card.id === state.primaryId;
+  const isCollapsed = state.collapsed.has(card.id);
 
   const input = h('input', {
     class: 'input',
@@ -183,10 +185,20 @@ function renderCard(card) {
 
   return h(
     'article',
-    { class: `card${isPrimary ? ' is-primary' : ''}` },
+    { class: `card${isPrimary ? ' is-primary' : ''}${isCollapsed ? ' is-collapsed' : ''}` },
     h(
       'header',
       { class: 'card-head' },
+      h('button', {
+        type: 'button',
+        class: 'icon-btn card-toggle',
+        title: isCollapsed ? 'Развернуть' : 'Свернуть',
+        'aria-label': isCollapsed ? 'Развернуть карточку' : 'Свернуть карточку',
+        'aria-expanded': String(!isCollapsed),
+        dataset: { focusKey: `toggle-${card.id}` },
+        html: icons.chevron,
+        onClick: () => toggleCollapsed(card),
+      }),
       h(
         'div',
         { class: 'card-heading' },
@@ -404,6 +416,11 @@ function download(filename, content, type) {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function toggleCollapsed(card) {
+  if (!state.collapsed.delete(card.id)) state.collapsed.add(card.id);
+  render();
 }
 
 function togglePrimary(card) {

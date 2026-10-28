@@ -34,6 +34,7 @@ export const icons = {
   back: svg('<path d="M15 18l-6-6 6-6"/>'),
   download: svg('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/>'),
   arrow: svg('<path d="M9 18l6-6-6-6"/>'),
+  chevron: svg('<path d="M6 9l6 6 6-6"/>'),
 };
 
 export function iconButton(icon, label, onClick, extraClass = '') {
