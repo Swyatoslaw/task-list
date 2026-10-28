@@ -144,10 +144,28 @@ function cardItems(card) {
 
 function render() {
   const focus = captureFocus();
+  const scroll = captureScroll();
   const cards = sortedCards();
   els.cards.replaceChildren(...cards.map(renderCard));
   els.empty.hidden = cards.length > 0;
+  restoreScroll(scroll);
   restoreFocus(focus);
+}
+
+// Список пунктов прокручивается внутри карточки — сохраняем позицию между перерисовками.
+function captureScroll() {
+  const positions = new Map();
+  for (const list of els.cards.querySelectorAll('.card[data-card-id] .items')) {
+    if (list.scrollTop) positions.set(list.closest('.card').dataset.cardId, list.scrollTop);
+  }
+  return positions;
+}
+
+function restoreScroll(positions) {
+  for (const [cardId, top] of positions) {
+    const list = els.cards.querySelector(`.card[data-card-id="${cardId}"] .items`);
+    if (list) list.scrollTop = top;
+  }
 }
 
 // Перерисовка заменяет DOM, поэтому сохраняем и возвращаем фокус по data-focus-key.
@@ -185,7 +203,10 @@ function renderCard(card) {
 
   return h(
     'article',
-    { class: `card${isPrimary ? ' is-primary' : ''}${isCollapsed ? ' is-collapsed' : ''}` },
+    {
+      class: `card${isPrimary ? ' is-primary' : ''}${isCollapsed ? ' is-collapsed' : ''}`,
+      dataset: { cardId: card.id },
+    },
     h(
       'header',
       { class: 'card-head' },
