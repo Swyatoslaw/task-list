@@ -48,6 +48,7 @@ const state = {
   drafts: new Map(), // cardId -> текст нового пункта
   editing: null, // { id, text } — пункт в режиме редактирования
   collapsed: new Set(), // свёрнутые карточки, только до перезагрузки страницы
+  search: new Map(), // cardId -> строка поиска по пунктам, только до перезагрузки страницы
 };
 
 initThemeToggle(document.getElementById('theme-toggle'));
@@ -183,9 +184,16 @@ function restoreFocus(focus) {
   if (focus.start != null && el.setSelectionRange) el.setSelectionRange(focus.start, focus.end);
 }
 
+// Поиск без учёта регистра и разницы между «е» и «ё».
+const normalize = (text) => text.toLowerCase().replaceAll('ё', 'е');
+
 function renderCard(card) {
   const { active, done } = cardItems(card);
   const items = [...active, ...done];
+  const query = normalize((state.search.get(card.id) ?? '').trim());
+  const visible = query
+    ? items.filter((i) => i.id === state.editing?.id || normalize(i.text).includes(query))
+    : items;
   const isPrimary = card.id === state.primaryId;
   const isCollapsed = state.collapsed.has(card.id);
 
@@ -240,9 +248,12 @@ function renderCard(card) {
         iconButton('trash', 'Удалить карточку', () => removeCard(card), 'danger')
       )
     ),
-    items.length > 0
-      ? h('ul', { class: 'items' }, items.map(renderItem))
-      : h('p', { class: 'card-empty' }, 'Пунктов пока нет'),
+    items.length > 0 && renderSearch(card),
+    items.length === 0
+      ? h('p', { class: 'card-empty' }, 'Пунктов пока нет')
+      : visible.length === 0
+        ? h('p', { class: 'card-empty' }, 'Ничего не найдено')
+        : h('ul', { class: 'items' }, visible.map(renderItem)),
     h(
       'form',
       {
@@ -261,6 +272,43 @@ function renderCard(card) {
         html: icons.plus,
       })
     )
+  );
+}
+
+function renderSearch(card) {
+  const input = h('input', {
+    class: 'input input-sm search-input',
+    type: 'search',
+    placeholder: 'Поиск',
+    autocomplete: 'off',
+    enterkeyhint: 'search',
+    'aria-label': `Поиск пунктов в «${card.title}»`,
+    value: state.search.get(card.id) ?? '',
+    dataset: { focusKey: `search-${card.id}` },
+    onInput: (event) => setSearch(card, event.target.value),
+    onKeydown: (event) => {
+      if (event.key === 'Escape' && event.target.value) {
+        event.preventDefault();
+        setSearch(card, '', { now: true });
+      }
+    },
+  });
+  return h(
+    'div',
+    { class: 'card-search' },
+    h('span', { class: 'search-icon', html: icons.search }),
+    input,
+    h('button', {
+      type: 'button',
+      class: 'search-clear',
+      title: 'Очистить поиск',
+      'aria-label': 'Очистить поиск',
+      html: icons.close,
+      onClick: () => {
+        setSearch(card, '', { now: true });
+        els.cards.querySelector(`[data-focus-key="search-${card.id}"]`)?.focus();
+      },
+    })
   );
 }
 
@@ -437,6 +485,22 @@ function download(filename, content, type) {
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Фильтрация идёт по уже загруженным данным; перерисовка с небольшой задержкой после ввода.
+let searchTimer;
+
+function setSearch(card, value, { now = false } = {}) {
+  if (value) state.search.set(card.id, value);
+  else state.search.delete(card.id);
+  clearTimeout(searchTimer);
+  const apply = () => {
+    render();
+    const list = els.cards.querySelector(`.card[data-card-id="${card.id}"] .items`);
+    if (list) list.scrollTop = 0;
+  };
+  if (now) apply();
+  else searchTimer = setTimeout(apply, 150);
 }
 
 function toggleCollapsed(card) {

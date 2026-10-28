@@ -520,6 +520,65 @@ code {
   font-size: 14px;
 }
 
+/* Поиск по пунктам */
+
+.card-search {
+  position: relative;
+  padding: 8px 8px 4px 16px;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 26px;
+  display: flex;
+  color: var(--muted);
+  transform: translateY(calc(-50% + 2px));
+  pointer-events: none;
+}
+
+.search-icon svg,
+.search-clear svg {
+  width: 16px;
+  height: 16px;
+}
+
+.search-input {
+  padding: 0 34px 0 34px;
+  font-size: 16px;
+}
+
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.search-clear {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transform: translateY(calc(-50% + 2px));
+}
+
+.search-clear:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.search-input:placeholder-shown + .search-clear {
+  display: none;
+}
+
 .items {
   flex: 1 1 auto;
   min-height: 0;
